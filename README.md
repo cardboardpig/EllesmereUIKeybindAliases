@@ -4,6 +4,8 @@
 
 A small World of Warcraft Retail addon that adds custom keybind labels to EllesmereUI action bars. Aliases change the displayed text only; your actual key bindings stay the same.
 
+![EllesmereUI Action Bars settings showing the Keybind Aliases page with SMwU mapped to SMU and SMwD mapped to SMD](docs/assets/keybind-aliases-screenshot.png)
+
 ## Requirements
 
 - World of Warcraft Retail (TOC interface version `120100`).
@@ -41,7 +43,7 @@ EllesmereUIKeybindAliases/
 ├── Media/
 │   └── Icon.tga                # In-game 256 × 256, 32-bit TGA
 ├── docs/
-│   └── assets/icon.png         # Matching default icon for this README
+│   └── assets/                # README icon and addon screenshot
 ├── scripts/
 │   └── package.ps1             # Builds an installable addon ZIP
 └── README.md
