@@ -143,7 +143,7 @@ local _, h
 
 parent._showRowDivider = true
 
-_, h = W:SectionHeader(parent, "KEYBIND TEXT ALIASES", y)
+_, h = W:SectionHeader(parent, "KEYBIND ALIASES FOR ELLESMEREUI", y)
 y = y - h
 
 local info = EllesmereUI.MakeFont(parent, 11, nil, 1, 1, 1, 0.55)
@@ -156,9 +156,10 @@ info:SetWordWrap(true)
 info:SetText(L(
 "Replace the shortened keybind labels shown on EllesmereUI action bars. "
 .. "This changes only the displayed text; your actual WoW key bindings are untouched."
+.. "\n\nAn unofficial companion addon for EllesmereUI. Not affiliated with or endorsed by the EllesmereUI team."
 ))
 
-y = y - 42
+y = y - math.max(42, info:GetStringHeight() + 16)
 
 local leftHeader = EllesmereUI.MakeFont(parent, 10, nil, 1, 1, 1, 0.48)
 local rightHeader = EllesmereUI.MakeFont(parent, 10, nil, 1, 1, 1, 0.48)
