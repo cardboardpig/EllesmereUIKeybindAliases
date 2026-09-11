@@ -9,7 +9,7 @@ $distPath = Join-Path $addonRoot 'dist'
 New-Item -ItemType Directory -Force -Path $distPath | Out-Null
 $archivePath = Join-Path $distPath "$addonName-$version.zip"
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-$files = @("$addonName.toc", 'Runtime.lua', 'OptionsIntegration.lua', 'Media/Icon.tga')
+$files = @("$addonName.toc", 'Runtime.lua', 'OptionsIntegration.lua', 'Media/Icon.tga', 'LICENSE')
 foreach ($file in $files) {
     if (-not (Test-Path -LiteralPath (Join-Path $addonRoot $file) -PathType Leaf)) { throw "Missing addon file: $file" }
 }

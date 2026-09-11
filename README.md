@@ -54,3 +54,7 @@ Run `./scripts/package.ps1` in PowerShell. It creates `dist/EllesmereUIKeybindAl
 The default square icon and the ready-made WoW texture come from the supplied `EllesmereUIKeybindAliases_IconPack.zip`; the artwork is used unchanged.
 
 This addon depends on EllesmereUI internals, so changes to EllesmereUI may require compatibility updates. In-game behavior must be checked in WoW; packaging checks do not exercise the WoW UI.
+
+## License
+
+Licensed under the [MIT License](LICENSE). Copyright (c) 2026 cardboardpig.
