@@ -2,7 +2,7 @@
 
 # Keybind Aliases for EllesmereUI
 
-A small World of Warcraft Retail addon that adds custom keybind labels to EllesmereUI action bars. Aliases change the displayed text only; your actual key bindings stay the same.
+A small World of Warcraft Retail and WoW Forever addon that adds custom keybind labels to EllesmereUI action bars. Aliases change the displayed text only; your actual key bindings stay the same.
 
 An unofficial companion addon for EllesmereUI. Not affiliated with or endorsed by the EllesmereUI team.
 
@@ -10,8 +10,10 @@ An unofficial companion addon for EllesmereUI. Not affiliated with or endorsed b
 
 ## Requirements
 
-- World of Warcraft Retail (TOC interface version `120100`).
+- World of Warcraft Retail (TOC interface version `120100`) or WoW Forever (`16001`).
 - `EllesmereUI` and `EllesmereUIActionBars` installed and enabled.
+
+WoW Forever's interface ID matches the [upstream EllesmereUI Action Bars TOC](https://github.com/EllesmereGaming/EllesmereUI/blob/main/EllesmereUIActionBars/EllesmereUIActionBars.toc). Both clients use the same alias and options code.
 
 ## Installation
 
@@ -20,6 +22,8 @@ Download this repository using **Code → Download ZIP**, extract it, and rename
 ```text
 World of Warcraft/_retail_/Interface/AddOns/
 ```
+
+For WoW Forever, use that client's `Interface/AddOns/` folder instead (for the current beta, `World of Warcraft/_classic_beta_/Interface/AddOns/`).
 
 The resulting path must be `AddOns/EllesmereUIKeybindAliases/EllesmereUIKeybindAliases.toc`. Restart WoW or reload the interface after updating the addon.
 
