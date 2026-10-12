@@ -1,11 +1,12 @@
 -------------------------------------------------------------------------------
 -- OptionsIntegration.lua
--- Adds a Keybind Aliases page to the EllesmereUI Action Bars options module.
+-- Registers a standalone settings section through the EllesmereUI Plugin API.
 -------------------------------------------------------------------------------
 
 local _, ns = ...
 
-local ACTION_BARS_ADDON = "EllesmereUIActionBars"
+local PLUGIN_ID = "EllesmereUIKeybindAliases"
+local MODULE_KEY = "Aliases"
 local PAGE_ALIASES = "Keybind Aliases"
 
 -------------------------------------------------------------------------------
@@ -14,9 +15,16 @@ local PAGE_ALIASES = "Keybind Aliases"
 
 local function RefreshPage()
 
-if EllesmereUI and EllesmereUI.RefreshPage then
-C_Timer.After(0, function() EllesmereUI:RefreshPage() end)
-end
+-- Defer rebuilding until the current control's callback has returned. Only
+-- invalidate our own module if the user switches pages before this runs.
+C_Timer.After(0, function()
+local eui = EllesmereUI
+if not eui or not eui.GetPluginModuleKey then return end
+local key = eui.GetPluginModuleKey(PLUGIN_ID, MODULE_KEY)
+if not key then return end
+eui:InvalidateModulePageCache(key)
+if eui:GetActiveModule() == key then eui:RefreshPage(true) end
+end)
 
 end
 
@@ -130,6 +138,10 @@ end
 
 local function BuildAliasesPage(parent, yOffset)
 
+-- This editor uses real frames, so hidden search pre-builds must not create
+-- controls or initialize saved variables.
+if EllesmereUI.IsSearchPrebuild() then return 0 end
+
 local db = ns.EnsureDB and ns.EnsureDB()
 
 if not db then return 0 end
@@ -140,8 +152,6 @@ local L = EllesmereUI.L
 local pad = EllesmereUI.CONTENT_PAD or 16
 local y = yOffset
 local _, h
-
-parent._showRowDivider = true
 
 _, h = W:SectionHeader(parent, "KEYBIND ALIASES FOR ELLESMEREUI", y)
 y = y - h
@@ -179,8 +189,9 @@ local rowFrame = CreateFrame("Frame", nil, parent)
 PP.Size(rowFrame, parent:GetWidth() - pad * 2, 54)
 PP.Point(rowFrame, "TOPLEFT", parent, "TOPLEFT", pad, y)
 
-rowFrame._skipRowDivider = true
-EllesmereUI.RowBg(rowFrame, parent)
+local rowBg = rowFrame:CreateTexture(nil, "BACKGROUND")
+rowBg:SetAllPoints()
+rowBg:SetColorTexture(1, 1, 1, index % 2 == 0 and 0.025 or 0.045)
 
 local removeButton = MakeButton(rowFrame, 92, "Remove")
 
@@ -311,111 +322,36 @@ return math.abs(y)
 end
 
 -------------------------------------------------------------------------------
--- Action Bars module integration
+-- Plugin registration
 -------------------------------------------------------------------------------
 
-local function ExtendActionBarsConfig(config)
-
-if type(config) ~= "table" or config._keybindAliasesExtended then return end
-
-config._keybindAliasesExtended = true
-config.pages = config.pages or {}
-
-for _, page in ipairs(config.pages) do
-if page == PAGE_ALIASES then return end
-end
-
-config.pages[#config.pages + 1] = PAGE_ALIASES
-
-local buildPage = config.buildPage
-
-config.buildPage = function(pageName, parent, yOffset)
-
+if EllesmereUI and type(EllesmereUI.RegisterPlugin) == "function" then
+EllesmereUI.RegisterPlugin(PLUGIN_ID, {
+label = "Keybind Aliases",
+modules = {
+{
+key = MODULE_KEY,
+title = "Keybind Aliases",
+description = "Custom display labels for EllesmereUI action-bar keybinds.",
+pages = { PAGE_ALIASES },
+-- Custom edit boxes need real frames; the page itself remains searchable.
+searchPrebuild = false,
+buildPage = function(pageName, parent, yOffset)
 if pageName == PAGE_ALIASES then
 return BuildAliasesPage(parent, yOffset)
 end
-
-if buildPage then
-return buildPage(pageName, parent, yOffset)
+return 0
+end,
+},
+},
+})
 end
 
+SLASH_EUIKEYBINDALIASES1 = "/euika"
+SlashCmdList.EUIKEYBINDALIASES = function()
+if EllesmereUI and type(EllesmereUI.OpenPlugin) == "function" then
+EllesmereUI.OpenPlugin(PLUGIN_ID, MODULE_KEY, PAGE_ALIASES)
+else
+print("Keybind Aliases: update EllesmereUI to a version with Plugin API v1, then reload the interface.")
 end
-
-local getHeaderBuilder = config.getHeaderBuilder
-
-if getHeaderBuilder then
-
-config.getHeaderBuilder = function(pageName)
-
-if pageName == PAGE_ALIASES then return nil end
-
-return getHeaderBuilder(pageName)
-
 end
-
-end
-
-local onPageCacheRestore = config.onPageCacheRestore
-
-if onPageCacheRestore then
-
-config.onPageCacheRestore = function(pageName)
-
-if pageName == PAGE_ALIASES then
-
-if ns.RefreshAliases then ns.RefreshAliases() end
-
-return
-
-end
-
-return onPageCacheRestore(pageName)
-
-end
-
-end
-
-end
-
-local function InstallRegisterHook()
-
-if not EllesmereUI or type(EllesmereUI.RegisterModule) ~= "function" then return false end
-if EllesmereUI._keybindAliasesRegisterHook then return true end
-
-local RegisterModule = EllesmereUI.RegisterModule
-
-EllesmereUI.RegisterModule = function(self, moduleName, config, ...)
-
-if moduleName == ACTION_BARS_ADDON then
-ExtendActionBarsConfig(config)
-end
-
-return RegisterModule(self, moduleName, config, ...)
-
-end
-
-EllesmereUI._keybindAliasesRegisterHook = true
-
-return true
-
-end
-
--------------------------------------------------------------------------------
--- Initialization
--------------------------------------------------------------------------------
-
-local initFrame = CreateFrame("Frame")
-
-initFrame:RegisterEvent("PLAYER_LOGIN")
-initFrame:RegisterEvent("ADDON_LOADED")
-
-initFrame:SetScript("OnEvent", function(self)
-
-if InstallRegisterHook() then
-self:UnregisterEvent("PLAYER_LOGIN")
-self:UnregisterEvent("ADDON_LOADED")
-end
-
-end)
-
-InstallRegisterHook()

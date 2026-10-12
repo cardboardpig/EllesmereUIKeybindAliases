@@ -6,12 +6,12 @@ A small World of Warcraft Retail and WoW Forever addon that adds custom keybind 
 
 An unofficial companion addon for EllesmereUI. Not affiliated with or endorsed by the EllesmereUI team.
 
-![EllesmereUI Action Bars settings showing the Keybind Aliases page with SMwU mapped to SMU and SMwD mapped to SMD](docs/assets/keybind-aliases-screenshot.png)
+The settings editor lives in its own **Keybind Aliases** sidebar section in EllesmereUI.
 
 ## Requirements
 
 - World of Warcraft Retail (TOC interface version `120100`) or WoW Forever (`16001`).
-- `EllesmereUI` and `EllesmereUIActionBars` installed and enabled.
+- `EllesmereUI` with Plugin API v1 and `EllesmereUIActionBars` installed and enabled.
 
 WoW Forever's interface ID matches the [upstream EllesmereUI Action Bars TOC](https://github.com/EllesmereGaming/EllesmereUI/blob/main/EllesmereUIActionBars/EllesmereUIActionBars.toc). Both clients use the same alias and options code.
 
@@ -57,11 +57,21 @@ EllesmereUIKeybindAliases/
 
 ## Packaging
 
-Run `./scripts/package.ps1` in PowerShell. It creates `dist/EllesmereUIKeybindAliases-2.5.1.zip` containing the addon folder, its Lua files, TOC, and in-game icon. Repository documentation and development files are excluded.
+Run `./scripts/package.ps1` in PowerShell. It creates `dist/EllesmereUIKeybindAliases-2.6.0.zip` containing the addon folder, its Lua files, TOC, and in-game icon. Repository documentation and development files are excluded.
 
 The default square icon and the ready-made WoW texture come from the supplied `EllesmereUIKeybindAliases_IconPack.zip`; the artwork is used unchanged.
 
-This addon depends on EllesmereUI internals, so changes to EllesmereUI may require compatibility updates. In-game behavior must be checked in WoW; packaging checks do not exercise the WoW UI.
+Settings use the [EllesmereUI Plugin API](https://github.com/EllesmereGaming/EllesmereUI/blob/main/PLUGINS_API.md). The addon does not modify EUI's modules or read its private fields. Existing saved aliases are retained when upgrading. Aliases remain separate from EUI profiles and overrides.
+
+The custom editor skips search pre-builds; its page is searchable, but its custom edit boxes are not individually indexed. Runtime label discovery uses named action-bar frames and WoW's frame APIs. Those frame names are not part of the Plugin API, so future action-bar changes may still require a compatibility update.
+
+In-game behavior must be checked in WoW; automated tests and packaging checks do not exercise the live WoW UI.
+
+## Validation
+
+With Lua 5.1 installed, run `lua scripts/test.lua` from the repository root. The mocked WoW/EUI checks cover alias updates and restoration, saved-data retention, plugin registration, search pre-build safety, editor callbacks, and page-cache isolation.
+
+After updating in WoW, run `/reload`, then `/euika`. Confirm the plugin section opens without an update popup, and try adding, editing, removing, and clearing aliases on action, pet, and stance bars. Switch away and back to check cached settings, and verify keybind changes still update the displayed labels.
 
 ## License
 

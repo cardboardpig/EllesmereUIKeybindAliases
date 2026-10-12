@@ -126,27 +126,20 @@ end
 
 local function HookActionBarButtons()
 
-local eui = _G.EllesmereUI
-local moduleNS = eui and eui._ModuleNS and eui._ModuleNS["EllesmereUIActionBars"]
-local barButtons = moduleNS and moduleNS.barButtons
-
-if type(barButtons) ~= "table" then return end
-
-for _, buttons in pairs(barButtons) do
-
-if type(buttons) == "table" then
-
-for _, button in pairs(buttons) do
-
-if button and button.HotKey then
-HookHotkey(button.HotKey)
+-- Discover hotkey regions through WoW's named frames and GetChildren API.
+-- Never read EUI's private module registry or hook its Lua functions.
+local function HookBar(barName)
+local bar = _G["EABBar_" .. barName]
+if not bar then return end
+for _, button in ipairs({ bar:GetChildren() }) do
+if button.HotKey then HookHotkey(button.HotKey) end
+end
 end
 
-end
-
-end
-
-end
+HookBar("MainBar")
+for index = 2, 10 do HookBar("Bar" .. index) end
+HookBar("StanceBar")
+HookBar("PetBar")
 
 end
 
