@@ -57,7 +57,7 @@ EllesmereUIKeybindAliases/
 
 ## Packaging
 
-Run `./scripts/package.ps1` in PowerShell. It creates `dist/EllesmereUIKeybindAliases-2.5.0.zip` containing the addon folder, its Lua files, TOC, and in-game icon. Repository documentation and development files are excluded.
+Run `./scripts/package.ps1` in PowerShell. It creates `dist/EllesmereUIKeybindAliases-2.5.1.zip` containing the addon folder, its Lua files, TOC, and in-game icon. Repository documentation and development files are excluded.
 
 The default square icon and the ready-made WoW texture come from the supplied `EllesmereUIKeybindAliases_IconPack.zip`; the artwork is used unchanged.
 
