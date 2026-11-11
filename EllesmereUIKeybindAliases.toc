@@ -2,9 +2,10 @@
 ## Title: Keybind Aliases for EllesmereUI
 ## IconTexture: Interface\AddOns\EllesmereUIKeybindAliases\Media\Icon.tga
 ## Notes: Unofficial companion addon that adds customizable action-bar keybind text aliases to EllesmereUI. Not affiliated with or endorsed by the EllesmereUI team.
-## Version: 2.6.0
+## Version: 2.6.2
 ## Dependencies: EllesmereUI, EllesmereUIActionBars
 ## SavedVariables: EllesmereUIKeybindAliasesDB
 
 Runtime.lua
+SettingsGroup.lua
 OptionsIntegration.lua

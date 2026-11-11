@@ -2,11 +2,13 @@
 local frames, timers = {}, {}
 local ns = {}
 local function Frame(kind)
-    local frame = { kind = kind, scripts = {}, children = {} }
+    local frame = { kind = kind, scripts = {}, children = {}, events = {} }
     setmetatable(frame, { __index = function(_, key)
         return function() end
     end })
     function frame:SetScript(event, fn) self.scripts[event] = fn end
+    function frame:RegisterEvent(event) self.events[event] = true end
+    function frame:UnregisterEvent(event) self.events[event] = nil end
     function frame:SetText(text) self.text = text end
     function frame:GetText() return rawget(self, "text") end
     function frame:GetWidth() return 800 end
@@ -17,6 +19,11 @@ local function Frame(kind)
     return frame
 end
 CreateFrame = Frame
+local function DispatchEvent(event)
+    for _, frame in ipairs(frames) do
+        if frame.events[event] then frame.scripts.OnEvent(frame, event) end
+    end
+end
 function wipe(t) for key in pairs(t) do t[key] = nil end end
 function strtrim(s) return (s:gsub("^%s+", ""):gsub("%s+$", "")) end
 local hooks = 0
@@ -87,7 +94,7 @@ EllesmereUI = setmetatable({
     Widgets = { SectionHeader = function() return {}, 24 end },
     RegisterPlugin = function(id, config)
         assert(id == pluginID and not spec)
-        assert(config.label == "Keybind Aliases")
+        assert(config.label == "Paper Bacon Bits")
         assert(#config.modules == 1 and config.modules[1].key == "Aliases")
         assert(config.modules[1].searchPrebuild == false)
         spec = config
@@ -116,7 +123,10 @@ EllesmereUI = setmetatable({
     end,
     __newindex = function() error("EUI functions/fields must not be overwritten") end,
 })
+assert(loadfile("SettingsGroup.lua"))(pluginID, ns)
 assert(loadfile("OptionsIntegration.lua"))(pluginID, ns)
+assert(not spec, "The shared section must wait until every addon has loaded")
+DispatchEvent("PLAYER_LOGIN")
 assert(spec and SLASH_EUIKEYBINDALIASES1 == "/euika")
 SlashCmdList.EUIKEYBINDALIASES()
 assert(opened[1] == pluginID and opened[2] == "Aliases" and opened[3] == "Keybind Aliases")
@@ -150,7 +160,7 @@ FlushTimers()
 assert(#saved.aliases == 2 and refreshes == 1)
 buttons = BuildEditor()
 buttons[1].scripts.OnClick() -- Remove first alias
-active = "UnrelatedModule" -- User switches away before deferred refresh
+active = "plugin:" .. pluginID .. ":Routing" -- Switch to the other shared page before refresh
 FlushTimers()
 assert(#saved.aliases == 1 and refreshes == 1 and #invalidations == 2)
 assert(late:GetText() == "SMwU")
@@ -162,6 +172,89 @@ assert(#saved.aliases == 0 and refreshes == 2)
 
 -- Older EUI must not receive the old RegisterModule monkey patch.
 EllesmereUI = {}
-assert(loadfile("OptionsIntegration.lua"))(pluginID, ns)
+PaperBaconBitsSettings = nil
+local legacyNS = {}
+assert(loadfile("SettingsGroup.lua"))(pluginID, legacyNS)
+assert(loadfile("OptionsIntegration.lua"))(pluginID, legacyNS)
+DispatchEvent("PLAYER_LOGIN")
 assert(next(EllesmereUI) == nil)
-print("PASS: runtime aliases, plugin registration, search safety, editor changes, cache isolation, legacy guard")
+
+local function CheckSettingsGroup(providers, openBeforeLogin)
+    local firstFrame = #frames + 1
+    local registration, registeredID, openedPage
+    local registrations = 0
+    local env = setmetatable({}, { __index = _G })
+    env._G = env
+    env.PaperBaconBitsSettings = false
+    env.CreateFrame = Frame
+    env.EllesmereUI = {
+        RegisterPlugin = function(id, config)
+            registrations = registrations + 1
+            registeredID = id
+            registration = { label = config.label, modules = {} }
+            for index, module in ipairs(config.modules) do registration.modules[index] = module end
+            return true
+        end,
+        OpenPlugin = function(id, module, page)
+            openedPage = { id, module, page }
+            return true
+        end,
+    }
+    local namespaces = {}
+    for _, provider in ipairs(providers) do
+        local providerNS = {}
+        local chunk = assert(loadfile("SettingsGroup.lua"))
+        setfenv(chunk, env)
+        chunk(provider.addon, providerNS)
+        providerNS.SettingsGroup.AddModule(provider.addon, {
+            key = provider.key,
+            title = provider.title,
+            pages = { provider.page },
+            buildPage = function() return 0 end,
+        })
+        namespaces[#namespaces + 1] = providerNS
+    end
+    assert(registrations == 0, "Both providers must join before section registration")
+    if openBeforeLogin then
+        namespaces[1].SettingsGroup.Open(providers[1].key, providers[1].page)
+        assert(registrations == 1, "Opening settings can register the collected modules before login")
+    end
+    for index = firstFrame, #frames do
+        local frame = frames[index]
+        if frame.events.PLAYER_LOGIN then frame.scripts.OnEvent(frame, "PLAYER_LOGIN") end
+    end
+    assert(registrations == 1 and registration.label == "Paper Bacon Bits")
+    assert(#registration.modules == #providers, "Only installed addon modules belong in the section")
+    local expectedID = providers[1].addon
+    for _, provider in ipairs(providers) do
+        if provider.addon < expectedID then expectedID = provider.addon end
+    end
+    assert(registeredID == expectedID, "The section provider must be independent of load order")
+    local modules = {}
+    for _, module in ipairs(registration.modules) do modules[module.key] = module end
+    for index, provider in ipairs(providers) do
+        local group = namespaces[index].SettingsGroup
+        assert(group.pluginID == expectedID)
+        assert(modules[provider.key].title == provider.title)
+        group.Open(provider.key, provider.page)
+        assert(openedPage[1] == expectedID and openedPage[2] == provider.key and openedPage[3] == provider.page)
+    end
+    for index = firstFrame, #frames do
+        local frame = frames[index]
+        if frame.events.PLAYER_LOGIN then frame.scripts.OnEvent(frame, "PLAYER_LOGIN") end
+    end
+    assert(registrations == 1, "The shared section must be registered exactly once")
+end
+
+local aliasesProvider = {
+    addon = "EllesmereUIKeybindAliases", key = "Aliases", title = "Keybind Aliases", page = "Keybind Aliases",
+}
+local routingProvider = {
+    addon = "EllesmereUIQuestTrackerSPF", key = "Routing", title = "Shortest Path Forever", page = "Behavior",
+}
+CheckSettingsGroup({ aliasesProvider })
+CheckSettingsGroup({ routingProvider })
+CheckSettingsGroup({ aliasesProvider, routingProvider })
+CheckSettingsGroup({ routingProvider, aliasesProvider })
+CheckSettingsGroup({ routingProvider, aliasesProvider }, true)
+print("PASS: aliases, shared section load orders, search safety, editor changes, page isolation, legacy guard")

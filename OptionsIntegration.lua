@@ -1,11 +1,10 @@
 -------------------------------------------------------------------------------
 -- OptionsIntegration.lua
--- Registers a standalone settings section through the EllesmereUI Plugin API.
+-- Contributes settings to Paper Bacon Bits through the EllesmereUI Plugin API.
 -------------------------------------------------------------------------------
 
-local _, ns = ...
+local addonName, ns = ...
 
-local PLUGIN_ID = "EllesmereUIKeybindAliases"
 local MODULE_KEY = "Aliases"
 local PAGE_ALIASES = "Keybind Aliases"
 
@@ -20,7 +19,9 @@ local function RefreshPage()
 C_Timer.After(0, function()
 local eui = EllesmereUI
 if not eui or not eui.GetPluginModuleKey then return end
-local key = eui.GetPluginModuleKey(PLUGIN_ID, MODULE_KEY)
+local group = ns.SettingsGroup
+if not group or not group.pluginID then return end
+local key = eui.GetPluginModuleKey(group.pluginID, MODULE_KEY)
 if not key then return end
 eui:InvalidateModulePageCache(key)
 if eui:GetActiveModule() == key then eui:RefreshPage(true) end
@@ -325,11 +326,8 @@ end
 -- Plugin registration
 -------------------------------------------------------------------------------
 
-if EllesmereUI and type(EllesmereUI.RegisterPlugin) == "function" then
-EllesmereUI.RegisterPlugin(PLUGIN_ID, {
-label = "Keybind Aliases",
-modules = {
-{
+if ns.SettingsGroup then
+ns.SettingsGroup.AddModule(addonName, {
 key = MODULE_KEY,
 title = "Keybind Aliases",
 description = "Custom display labels for EllesmereUI action-bar keybinds.",
@@ -342,15 +340,13 @@ return BuildAliasesPage(parent, yOffset)
 end
 return 0
 end,
-},
-},
 })
 end
 
 SLASH_EUIKEYBINDALIASES1 = "/euika"
 SlashCmdList.EUIKEYBINDALIASES = function()
-if EllesmereUI and type(EllesmereUI.OpenPlugin) == "function" then
-EllesmereUI.OpenPlugin(PLUGIN_ID, MODULE_KEY, PAGE_ALIASES)
+if EllesmereUI and type(EllesmereUI.OpenPlugin) == "function" and ns.SettingsGroup then
+ns.SettingsGroup.Open(MODULE_KEY, PAGE_ALIASES)
 else
 print("Keybind Aliases: update EllesmereUI to a version with Plugin API v1, then reload the interface.")
 end
