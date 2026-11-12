@@ -1,8 +1,8 @@
 ## Interface: 120100, 16001
-## Title: Keybind Aliases for EllesmereUI
+## Title: |cffd3d4d8PaperBacon|r Keybind Aliases for EllesmereUI
 ## IconTexture: Interface\AddOns\EllesmereUIKeybindAliases\Media\Icon.tga
 ## Notes: Unofficial companion addon that adds customizable action-bar keybind text aliases to EllesmereUI. Not affiliated with or endorsed by the EllesmereUI team.
-## Version: 2.6.2
+## Version: 2.6.3
 ## Dependencies: EllesmereUI, EllesmereUIActionBars
 ## SavedVariables: EllesmereUIKeybindAliasesDB
 
